@@ -1,7 +1,6 @@
 - name: db configuration
   hosts: tag_db_server
   tasks:
-
     - debug:
         var: ansible_host
     - debug:
@@ -36,15 +35,15 @@
 
     - name: Create password for the root user
       mysql_user:
-        login_password: ''
+        login_password: ""
         login_user: root
         name: root
-        password: "devenes1234"    
+        password: "devenes1234"
 
     - name: copy the .my.cnf file
       copy:
         src: ~/.my.cnf
-        dest: ~/       
+        dest: ~/
 
     - name: Create db user with name 'remoteUser' and password 'devenes1234' with all database privileges
       mysql_user:
@@ -52,9 +51,9 @@
         password: "devenes1234"
         login_user: "root"
         login_password: "devenes1234"
-        priv: '*.*:ALL,GRANT'
+        priv: "*.*:ALL,GRANT"
         state: present
-        host: "172.31.16.232"        
+        host: "172.31.16.232"
 
     - name: Create database schema
       mysql_db:
@@ -70,40 +69,39 @@
 
     - name: DEBUG
       debug:
-        var: resultOfShowTables        
+        var: resultOfShowTables
 
     - name: Import database table
       mysql_db:
-        name: ecomdb   # This is the database schema name.
-        state: import  # This module is not idempotent when the state property value is import.
+        name: ecomdb # This is the database schema name.
+        state: import # This module is not idempotent when the state property value is import.
         target: ~/db-load-script.sql # This script creates the products table.
-      when: resultOfShowTables.stdout == "" # This line checks if the table is already imported. If so this task doesn't run.        
+      when: resultOfShowTables.stdout == "" # This line checks if the table is already imported. If so this task doesn't run.
 
     - name: restart mariadb
       become: yes
-      service: 
+      service:
         name: mariadb
         state: restarted
 
 - name: web server configuration
   hosts: tag_web_server
   become: yes
-  tasks: 
-
+  tasks:
     - name: install the latest version of Git, Apache, Php, Php-Mysqlnd
       package:
-        name: 
+        name:
           - git
           - httpd
           - php
           - php-mysqlnd
-        state: latest     
+        state: latest
 
     - name: start the server and enable it
       service:
         name: httpd
         state: started
-        enabled: yes            
+        enabled: yes
 
     - name: clone the repo of the website
       shell: |
@@ -127,9 +125,9 @@
       when: not result.stdout == "already cloned..."
 
     - selinux:
-        state: disabled    
+        state: disabled
 
     - name: Restart service httpd
       service:
         name: httpd
-        state: restarted      
+        state: restarted
